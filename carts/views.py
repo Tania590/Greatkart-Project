@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from store.models import Product
 from .models import Cart, CartItem
 
@@ -34,6 +34,28 @@ def add_cart(request, product_id):
         return redirect('cart')
     except Product.DoesNotExist:
         return redirect('home')
+
+
+def remove_cart(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    cart =  Cart.objects.get(cart_id=__session_id(request))
+    cart_item = CartItem.objects.get(cart=cart,product=product)
+    if cart_item.quantity > 1:
+        cart_item.quantity -= 1
+        cart_item.save()
+    else:
+        cart_item.delete()
+    return redirect('cart')
+
+
+def remove_cart_item(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    cart =  Cart.objects.get(cart_id=__session_id(request))
+
+    cart_item = CartItem.objects.get(cart=cart, product=product)
+    cart_item.delete()
+    return redirect('cart')
+
 
 def cart(request, total=0):
     cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request), is_active=True)
