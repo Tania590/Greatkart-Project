@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import Product
 from carts.views import __session_id
 from carts.models import  Cart, CartItem
+
 
 def store(request, category_slug=None):
     if category_slug != None:
@@ -32,3 +34,18 @@ def product_detail(request, category_slug, product_slug):
         'in_cart': in_cart
     }
     return render(request, 'store/product_detail.html', context)
+
+
+def search(request):
+    keyword = request.GET['q']
+    if keyword:
+        result = Product.objects.filter(Q(name__icontains=keyword) | Q(description__icontains=keyword))
+        product_count = result.count()
+        context = {
+            'products': result,
+            'product_count': product_count
+        }
+    else:
+        context = {}
+
+    return render(request, 'store/store.html', context)
