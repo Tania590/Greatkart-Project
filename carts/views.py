@@ -35,5 +35,18 @@ def add_cart(request, product_id):
     except Product.DoesNotExist:
         return redirect('home')
 
-def cart(request):
-    return render(request, 'carts/cart.html')
+def cart(request, total=0):
+    cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request), is_active=True)
+
+    if cart_items:
+        for item in cart_items:
+            total += item.sub_total()
+    tax = (2*total)/100
+    grand_total = total+tax
+    context = {
+        'cart_items' : cart_items,
+        'total': total,
+        'tax': tax,
+        'grand_total': grand_total
+    }
+    return render(request, 'carts/cart.html', context)
