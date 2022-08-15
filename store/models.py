@@ -2,8 +2,6 @@ from django.db import models
 from django.urls import reverse
 from category.models import Category
 
-
-# Create your models here.
 class Product(models.Model):
     name = models.CharField(max_length=150, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
@@ -24,6 +22,18 @@ class Product(models.Model):
         return reverse('product_detail', kwargs={'category_slug':self.category.slug, 'product_slug':self.slug})
 
 
+class VariationManager(models.Manager):
+    def all(self):
+        return super().all().filter(is_active=True)
+
+    def colors(self):
+        return self.all().filter(variation_category='color')
+
+    def sizes(self):
+        return self.all().filter(variation_category='size')
+
+
+
 class Variation( models.Model):
 
     VARIATION_CATEGORY_CHOICE = (
@@ -37,5 +47,7 @@ class Variation( models.Model):
     is_active = models.BooleanField(default=True)
     date_modified = models.DateTimeField(auto_now=True)
 
+    objects = VariationManager()
+
     def __str__(self):
-        return self.variation_value
+        return self.product.name

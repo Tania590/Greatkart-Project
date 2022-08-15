@@ -10,9 +10,10 @@ def __session_id(request):
 
 
 def add_cart(request, product_id):
-    color = request.GET['color']
-    size = request.GET['size']
-    print(color + ' ' + size)
+    if request.method == "POST":
+        color = request.POST['color']
+        size = request.POST['size']
+        print(color + ' ' + size)
     try:
         product = Product.objects.get(pk=product_id)
         #wrangler shirt

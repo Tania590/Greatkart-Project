@@ -18,7 +18,8 @@
 					</article> <!-- gallery-wrap .end// -->
 				</aside>
 				<main class="col-md-6 border-left">
-					<form action="{% url 'add_cart' product.id %}" method="GET">
+					<form action="{% url 'add_cart' product.id %}" method="POST">
+						{% csrf_token %}
 
 						<article class="content-body">
 
@@ -37,10 +38,9 @@
 									<h6>Choose Color</h6>
 									<select class="form-control"  name = "color" required>
   									<option value="" selected disabled>Select</option>
-  									<option value="silver">Silver</option>
-  									<option value="gray">Gray</option>
-  									<option value="gold">Gold</option>
-										<option value="black">Black</option>
+										{% for i in product.variation_set.colors %}
+  									<option value="{{ i.variation_value | lower }}">{{ i.variation_value | capfirst }}</option>
+  									{% endfor %}
 									</select>
 
 								</div>
@@ -50,10 +50,10 @@
 									<h6>Select Size</h6>
 									<select class="form-control"  name = "size" required>
   									<option value="" selected disabled>Select</option>
-  									<option value="small">S</option>
-  									<option value="medium">M</option>
-  									<option value="large">L</option>
-										<option value="extra-large">XL</option>
+										{% for j in product.variation_set.sizes %}
+										<option value="{{ j.variation_value | lower }}">{{ j.variation_value | capfirst }}</option>
+
+  									{% endfor %}
 									</select>
 								</div>
 							</div> <!-- row.// -->
