@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Product
+from store.models import Product, Variation
 from .models import Cart, CartItem
 
 def __session_id(request):
@@ -10,54 +10,96 @@ def __session_id(request):
 
 
 def add_cart(request, product_id):
+    product = Product.objects.get(pk=product_id)
+    #wrangler shirt
+    product_variation = []
+    #[<Variation: Red>, <Variation: Medium>]
+
     if request.method == "POST":
-        color = request.POST['color']
-        size = request.POST['size']
-        print(color + ' ' + size)
-    try:
-        product = Product.objects.get(pk=product_id)
-        #wrangler shirt
+        for item in request.POST:
+            key = item
+            value = request.POST[key]
+            try:
+                variation = Variation.objects.get(product=product, variation_category__iexact=key, variation_value__iexact=value)
+                product_variation.append(variation)
+            except Variation.DoesNotExist:
+                pass
+        #this for loop above populoates the product_variation array
+
         try:
-            cart = Cart.objects.get(cart_id=__session_id(request))
+                cart = Cart.objects.get(cart_id=__session_id(request))
         except Cart.DoesNotExist:
-            cart = Cart.objects.create(cart_id=__session_id(request))
-            cart.save()
-        try:
-            cart_item = CartItem.objects.get(cart=cart, product=product)
-            #wrangler shirt already in  cart
-            cart_item.quantity +=1
-            cart_item.save()
-        except CartItem.DoesNotExist:
-            #wrangler shirt not in cart
+                cart = Cart.objects.create(cart_id=__session_id(request))
+                cart.save()
+
+        # obs 1: we create the cart item even if the item already exists with or without variations
+
+        #check if we already have this item in cart with same  variations
+        cart_item_exists = CartItem.objects.filter(cart=cart, product=product).exists()
+        if cart_item_exists:
+            cart_item = CartItem.objects.filter(cart=cart, product=product)
+            existing_variations = []
+            #[[<Variation: Red>, <Variation: Medium>], [<Variation: Green>, <Variation: Small>]]
+            ids = []
+            #ids =  [2, 3, 4]
+            #this  cart already has this wrangler shirt
+
+            for item in cart_item:
+                ex_vars = item.variations.all()
+                existing_variations.append(list(ex_vars))
+                ids.append(item.id)
+
+            if product_variation in existing_variations:
+                index = existing_variations.index(product_variation)
+                item_id = ids[index]
+                item = CartItem.objects.get(pk=item_id)
+                item.quantity += 1
+                item.save()
+            else:
+                cart_item = CartItem.objects.create(
+                    cart = cart,
+                    product = product,
+                    quantity = 1
+                )
+                if len(product_variation) > 0:
+                    cart_item.variations.set(product_variation)
+                cart_item.save()
+
+        else:
+            #cart doesnt have tthis wrangler shirt
             cart_item = CartItem.objects.create(
-                cart=cart,
-                product=product,
-                quantity=1
+                cart = cart,
+                product = product,
+                quantity = 1
             )
+            if len(product_variation) > 0:
+                cart_item.variations.set(product_variation)
             cart_item.save()
-        return redirect('cart')
-    except Product.DoesNotExist:
-        return redirect('home')
 
-
-def remove_cart(request, product_id):
-    product = get_object_or_404(Product, pk=product_id)
-    cart =  Cart.objects.get(cart_id=__session_id(request))
-    cart_item = CartItem.objects.get(cart=cart,product=product)
-    if cart_item.quantity > 1:
-        cart_item.quantity -= 1
-        cart_item.save()
-    else:
-        cart_item.delete()
     return redirect('cart')
 
-
-def remove_cart_item(request, product_id):
+def remove_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, pk=product_id)
     cart =  Cart.objects.get(cart_id=__session_id(request))
+    try:
+        cart_item = CartItem.objects.get(cart=cart,product=product,pk=cart_item_id)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+    except:
+        pass
+    return redirect('cart')
 
-    cart_item = CartItem.objects.get(cart=cart, product=product)
-    cart_item.delete()
+def remove_cart_item(request, product_id, cart_item_id):
+    product = get_object_or_404(Product, pk=product_id)
+    cart =  Cart.objects.get(cart_id=__session_id(request))
+    try:
+        cart_item = CartItem.objects.get(cart=cart, product=product, pk=cart_item_id)
+        cart_item.delete()
+    except:
+        pass
     return redirect('cart')
 
 
