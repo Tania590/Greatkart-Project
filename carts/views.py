@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from store.models import Product, Variation
 from .models import Cart, CartItem
 
@@ -118,3 +119,11 @@ def cart(request, total=0):
         'grand_total': grand_total
     }
     return render(request, 'carts/cart.html', context)
+
+@login_required(login_url='login')
+def checkout(request):
+    cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request), is_active=True)
+    context = {
+        'cart_items': cart_items
+    }
+    return render(request, 'store/checkout.html', context)

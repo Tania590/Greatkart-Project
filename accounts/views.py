@@ -9,6 +9,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from .models import Account
+from carts.models import CartItem
+from carts.views import __session_id
 
 def register(request):
     if request.method == "POST":
@@ -73,6 +75,11 @@ def login(request):
         password = request.POST['password']
         user = auth.authenticate(request, email=email, password=password)
         if user is not None:
+            cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request))
+            if cart_items:
+                for item in cart_items:
+                    item.user = user
+                    item.save()
             auth.login(request,user)
             messages.success(request, 'You are now logged in.')
             return redirect('dashboard')
@@ -80,6 +87,7 @@ def login(request):
             messages.error(request, 'Invalid Login Credentials.')
             return redirect('login')
     return render(request, 'accounts/login.html')
+
 
 @login_required(login_url='login')
 def logout(request):
