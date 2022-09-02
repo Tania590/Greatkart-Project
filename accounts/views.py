@@ -77,9 +77,38 @@ def login(request):
         if user is not None:
             cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request))
             if cart_items:
+                item_variations = []
+                item_ids = []
                 for item in cart_items:
-                    item.user = user
-                    item.save()
+                    ex_vars = item.variations.all()
+                    item_variations.append(list(ex_vars))
+                    item_ids.append(item.id)
+                users_cart_items = CartItem.objects.filter(user=user)
+                if users_cart_items:
+
+                    users_existing_variations = []
+                    ids = []
+                    for item in users_cart_items:
+                        existing_variations = item.variations.all()
+                        users_existing_variations.append(list(existing_variations))
+                        ids.append(item.id)
+                    for item in item_variations:
+                        if item in users_existing_variations:
+                            index = users_existing_variations.index(item)
+                            item_id = ids[index]
+                            item = CartItem.objects.get(pk=item_id)
+                            item.quantity += 1
+                            item.save()
+                        else:
+                            index = item_variations.index(item)
+                            item_id = item_ids[index]
+                            item = CartItem.objects.get(pk=item_id)
+                            item.user = user
+                            item.save()
+                else:
+                    for item in cart_items:
+                        item.user = user
+                        item.save()
             auth.login(request,user)
             messages.success(request, 'You are now logged in.')
             return redirect('dashboard')
@@ -87,7 +116,6 @@ def login(request):
             messages.error(request, 'Invalid Login Credentials.')
             return redirect('login')
     return render(request, 'accounts/login.html')
-
 
 @login_required(login_url='login')
 def logout(request):
