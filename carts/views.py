@@ -163,7 +163,7 @@ def cart(request, total=0):
 
 @login_required(login_url='login')
 def checkout(request):
-    cart_items = CartItem.objects.filter(cart__cart_id=__session_id(request), is_active=True)
+    cart_items = CartItem.objects.filter(user=request.user, is_active=True)
     context = {
         'cart_items': cart_items
     }
