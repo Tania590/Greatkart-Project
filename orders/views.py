@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from .forms import OrderForm
-from .models import Order
+from .models import Order, Payment
 from carts.models import CartItem
 import datetime
+import json
 
 #login required
 def place_order(request):
@@ -51,4 +52,16 @@ def place_order(request):
 
 
 def payments(request):
+    body = json.loads(request.body)
+    order = Order.objects.get(user=request.user, order_number=body['orderId'],is_ordered=False)
+    payment = Payment()
+    payment.user = request.user
+    payment.payment_id = body['transId']
+    payment.payment_method = body['paymentMethod']
+    payment.amount_paid = order.order_total
+    payment.status = body['status']
+    payment.save()
+    order.payment = payment
+    order.is_ordered = True
+    order.save()
     return render(request, 'orders/payments.html')
