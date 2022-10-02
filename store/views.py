@@ -1,10 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Product
+from django.contrib import messages
+from .models import Product, ReviewRating
 from carts.views import __session_id
 from carts.models import  Cart, CartItem
-
+from .forms import ReviewForm
 
 def store(request, category_slug=None):
     if category_slug != None:
@@ -49,3 +50,29 @@ def search(request):
         context = {}
 
     return render(request, 'store/store.html', context)
+
+
+def submit_review(request, product_id):
+    url = request.META['HTTP_REFERER']
+    if request.method == "POST":
+        #check if this user has already reviewd this product
+        try:
+            reviews = ReviewRating.objects.get(user = request.user, product__id=product_id)
+            form = ReviewForm(request.POST, instance=reviews)
+            form.save()
+            messages.success(request, 'Thank You. Your Review has been updated.')
+            return redirect(url)
+
+        except ReviewRating.DoesNotExist:
+            form = ReviewForm(request.POST)
+            if form.is_valid():
+                review_object = ReviewRating()
+                review_object.product_id = product_id
+                review_object.user = request.user
+                review_object.subject = form.cleaned_data['subject']
+                review_object.review = form.cleaned_data['review']
+                review_object.rating = form.cleaned_data['rating']
+                review_object.ip = request.META['REMOTE_ADDR']
+                review_object.save()
+                messages.success(request, 'Thank You. Your Review has been submitted.')
+                return redirect(url)
