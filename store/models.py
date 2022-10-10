@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 from category.models import Category
 from accounts.models import Account
+from  django.db.models import Avg, Count
 
 class Product(models.Model):
     name = models.CharField(max_length=150, unique=True)
@@ -21,6 +22,18 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         return reverse('product_detail', kwargs={'category_slug':self.category.slug, 'product_slug':self.slug})
+
+    def calculate_average(self, avg=0):
+        reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(avg_rating=Avg('rating'))
+        if reviews['avg_rating'] != None:
+            avg = reviews['avg_rating']
+        return avg
+
+    def count_review(self, review_count=0):
+        reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(count=Count('id'))
+        if reviews['count'] != None:
+            review_count = reviews['count']
+        return review_count
 
 
 class VariationManager(models.Manager):

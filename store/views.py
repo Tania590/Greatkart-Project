@@ -5,6 +5,7 @@ from django.contrib import messages
 from .models import Product, ReviewRating
 from carts.views import __session_id
 from carts.models import  Cart, CartItem
+from orders.models import OrderedProduct
 from .forms import ReviewForm
 
 def store(request, category_slug=None):
@@ -30,9 +31,13 @@ def product_detail(request, category_slug, product_slug):
     except Exception as e:
         raise e
     in_cart = CartItem.objects.filter(cart__cart_id=__session_id(request), product=product).exists()
+    product_purchased = OrderedProduct.objects.filter(user_id=request.user.id, product_id=product.id, ordered=True).exists()
+    reviews = ReviewRating.objects.filter(product=product, status=True)
     context = {
         'product': product,
-        'in_cart': in_cart
+        'in_cart': in_cart,
+        'product_purchased': product_purchased,
+        'reviews': reviews
     }
     return render(request, 'store/product_detail.html', context)
 
