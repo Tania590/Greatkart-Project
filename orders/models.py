@@ -51,6 +51,9 @@ class Order(models.Model):
     def full_address(self):
         return f'{self.address_line_1} {self.address_line_2}'
 
+    class Meta:
+        ordering = ['-date_ordered']
+
 class OrderedProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True)
