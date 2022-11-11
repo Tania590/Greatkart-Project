@@ -35,6 +35,16 @@ class Product(models.Model):
             review_count = reviews['count']
         return review_count
 
+class ProductGallery(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='store/products/', max_length=255)
+
+    class Meta:
+        verbose_name_plural = "Product Gallery"
+
+    def __str__(self):
+        return self.product.name
+
 
 class VariationManager(models.Manager):
     def all(self):

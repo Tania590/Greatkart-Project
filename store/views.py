@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib import messages
-from .models import Product, ReviewRating
+from .models import Product, ReviewRating, ProductGallery
 from carts.views import __session_id
 from carts.models import  Cart, CartItem
 from orders.models import OrderedProduct
@@ -33,11 +33,13 @@ def product_detail(request, category_slug, product_slug):
     in_cart = CartItem.objects.filter(cart__cart_id=__session_id(request), product=product).exists()
     product_purchased = OrderedProduct.objects.filter(user_id=request.user.id, product_id=product.id, ordered=True).exists()
     reviews = ReviewRating.objects.filter(product=product, status=True)
+    product_gallery = ProductGallery.objects.filter(product=product)
     context = {
         'product': product,
         'in_cart': in_cart,
         'product_purchased': product_purchased,
-        'reviews': reviews
+        'reviews': reviews,
+        'product_gallery': product_gallery
     }
     return render(request, 'store/product_detail.html', context)
 
