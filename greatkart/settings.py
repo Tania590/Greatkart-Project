@@ -52,11 +52,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_session_timeout.middleware.SessionTimeoutMiddleware',
 ]
+
+SESSION_EXPIRE_SECONDS = 3600
+SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 
 ROOT_URLCONF = 'greatkart.urls'
 
 AUTH_USER_MODEL = 'accounts.Account'
+
 
 TEMPLATES = [
     {
@@ -93,10 +98,8 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -133,7 +136,6 @@ MESSAGE_TAGS = {
 STATICFILES_DIRS = [
     BASE_DIR / "greatkart/static",
 ]
-
 
 STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
